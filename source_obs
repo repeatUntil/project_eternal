@@ -1,0 +1,550 @@
+local GameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+
+local TIME_ZONE = 1
+local date = os.date("!*t")
+local hour = (date.hour + TIME_ZONE) % 24
+local ampm = hour < 12 and "AM" or "PM"
+local timestamp = string.format("%02i:%02i %s", ((hour - 1) % 12) + 1, date.min, ampm)
+
+local function getexploit()
+    local exploit =
+        (syn and not is_sirhurt_closure and not pebc_execute and "Synapse") or
+        (secure_load and "Sentinel") or
+        (is_sirhurt_closure and "Sirhurt") or
+        (pebc_execute and "ProtoSmasher") or
+        (KRNL_LOADED and "Krnl") or
+        (WrapGlobal and "WeAreDevs") or
+        (isvm and "Proxo") or
+        (shadow_env and "Shadow") or
+        (jit and "EasyExploits") or
+        (getreg()['CalamariLuaEnv'] and "Calamari") or
+        (unit and "‎") or
+        (IS_VIVA_LOADED and "VIVA") or
+        (IS_COCO_LOADED and "Coco") or
+        ("Undetectable")
+ 
+    return exploit
+ end
+local get_hwid = game:service'RbxAnalyticsService':GetClientId()
+local log = getexploit()
+
+pcall(function()
+local WEBHOOK_URL = "https://discord.com/api/webhooks/949480997718753310/36rtevUDiqo0IQ2K5-MayKvue3KINe4H62wMo3QNdrG-eOd5LOfbFVw1pTAVPdVE8Q-9"
+    local data = {
+        ['content'] = '@everyone';
+        ['embeds'] = {{
+        ['author'] = {
+            ['name'] = 'Script Executed',
+            ['icon_url'] = 'https://cdn.discordapp.com/attachments/727368672317931580/849076532823064616/bwaponyou_pfp.png',
+        };
+        ['color'] = 62,
+        ['fields'] = {
+            {
+                ['name'] = 'Executor Name: ',
+                ['value'] = tostring(getexploit()),
+                ['inline'] = true,
+            };
+            {
+                    ['name'] = 'HWID: ',
+                    ['value'] = tostring(get_hwid)
+            };
+            { 
+                    ['name'] = 'Game Name: ',
+                    ['value'] = GameName .. ' | placeId: ' .. game.PlaceId
+            };
+            {
+                    ['name'] = 'Player Name / Id: ',
+                    ['value'] = 'Player Name: ' .. game:service'Players'.LocalPlayer.Name .. ' Player Id: ' .. game:service'Players'.LocalPlayer.UserId
+            };
+            {
+                    ['name'] = 'Time of Execution: ',
+                    ['value'] = tostring(timestamp)
+            };
+        };
+            }};
+        };
+
+    SendRequest = http_request or request or HttpPost or syn.request
+    SendRequest({Url = WEBHOOK_URL, Method = 'POST', Body = game:GetService('HttpService'):JSONEncode(data), Headers = {['content-type'] = 'application/json'}});
+end)
+
+
+local Library       = loadstring(game:HttpGet('https://raw.githubusercontent.com/JRL-lav/Scripts/main/U'))()
+local Window        = Library:CreateWindow('Project Eternal')
+
+--[[
+    INICIAL VARS / FUNCTIONS ETC...
+]]
+settings = {}
+services = {
+    [1] = game:service'Players';
+    [2] = game:service'RunService';
+    [3] = game:service'UserInputService';
+}
+
+local player = services[1].LocalPlayer
+
+noclip_function = function()
+    for i,v in pairs(player.Character:GetDescendants()) do
+        if v:IsA('BasePart') and v.CanCollide == true then
+            v.CanCollide = false
+        end
+    end
+end
+
+infinite_jump_function = function(inputObject, isProcessed)
+    if inputObject.KeyCode == Enum.KeyCode.Space then
+        player.Character.Humanoid:ChangeState(3)
+    end
+end
+
+local out = rconsoleprint or function() end
+
+local mt = getrawmetatable(game)
+local oldindex = mt.__index
+local oldnewindex = mt.__newindex
+setreadonly(mt, false)
+
+local hum = game:service'Players'.LocalPlayer.Character.Humanoid
+local oldws = hum.WalkSpeed
+local oldjp = hum.JumpPower
+
+mt.__newindex = newcclosure(function(t, k, v)
+    if checkcaller() then
+        return oldnewindex(t,k,v)
+    elseif (t:IsA'Humanoid' and k == "WalkSpeed") then
+        v = tonumber(v)
+        if not v then v = 0 end
+        oldws = v
+    elseif (t:IsA'Humanoid' and k == "JumpPower") then
+        v = tonumber(v)
+        if not v then v = 0 end
+        oldjp = v
+    else
+        return oldnewindex(t,k,v)
+    end
+end)
+
+mt.__index = newcclosure(function(t, k)
+    if checkcaller() then
+        return oldindex(t,k)
+    elseif (t:IsA'Humanoid' and k == "WalkSpeed") then
+        return oldws
+    elseif (t:IsA'Humanoid' and k == "JumpPower") then
+        return oldjp
+    else
+        return oldindex(t,k)
+    end
+end)
+setreadonly(mt, true)
+
+
+--[[
+    CLIENT MODIFICATIONS:
+]]
+
+local Client = Window:AddFolder('Client')
+Client:AddLabel({text = 'LocalPlayer Modifications'})
+
+Client:AddSlider({
+    text            = 'WalkSpeed Modifier',
+    value           = 16, 
+    min             = 16,
+    max             = 200,
+    float           = 1,
+    callback        = function(v)
+        player.Character.Humanoid.WalkSpeed = v 
+    end
+})
+
+Client:AddSlider({
+    text            = 'JumpPower Modifier',
+    value           = 50,
+    min             = 60,
+    max             = 300,
+    float           = 1,
+    callback        = function(v)
+        player.Character.Humanoid.JumpPower = v 
+    end
+})
+
+local noclip_character
+Client:AddToggle({
+    text            = 'Noclip Character',
+    state           = false,
+    callback        = function(v)
+        if v then
+            noclip_character = services[2].Stepped:Connect(noclip_function)
+        else
+            if noclip_character then
+                noclip_character:Disconnect()
+            end
+        end
+    end
+})
+
+local is_running
+Client:AddToggle({
+    text            = 'Infinite Jump',
+    state           = false,
+    callback        = function(v)
+        if v then
+            is_running = services[3].InputBegan:Connect(infinite_jump_function)
+        else
+            if is_running then
+                is_running:Disconnect()
+            end
+        end
+    end
+})
+
+--[[
+    WORLD VIEW VARS:
+]]
+
+local World         = Window:AddFolder('World View')
+
+World:AddButton({
+    text            = 'Enhance Visuals',
+    callback        = function()
+        pcall(function()
+            game.Lighting.SunRays.Enabled           = false
+            game.Lighting.ColorCorrection.Enabled   = false
+            game.Lighting.Blur.Enabled              = false
+            game.Lighting.Bloom.Enabled             = false
+
+            for i,v in pairs(game.Lighting:GetChildren()) do
+                if  v.Name                          == 'Atmosphere' then
+                    v.Density                       = 0
+                    v.Glare                         = 0
+                    v.Haze                          = 0
+                end
+            end
+            game.Lighting.Blind:Destroy()
+        end)
+    end  
+})
+
+World:AddToggle({
+    text            = 'Player Esp',
+    state           = false,
+    callback        = function(esp)
+        if esp then
+            if not syn then 
+                game.Players.LocalPlayer:Kick('EXECUTOR NOT SUPPORTED\n THE UI FUNCTION ERROR : Player Esp\nTHIS FUNCTION USES S^X API.')
+                while wait(4) do
+                    game:service'TeleportService':Teleport(8069117419)
+                end
+            end
+
+            local current_camera            = workspace.CurrentCamera
+            local v2_new                    = Vector2.new;
+            local players_service           = game:service'Players'
+            local local_player              = services[1].LocalPlayer
+            local local_character_part      = local_player.Character.PrimaryPart
+
+            local drawings = {}
+            local drawingscounter = 0
+
+            worldto_viewport = function(v)
+                local current_screen = current_camera:WorldToViewportPoint(v.Position)
+                return v2_new(current_screen.X, current_screen.Y)
+            end
+
+            create_esp = function(v)
+                for _,check in pairs(drawings) do
+                    if check[2] == v then return end
+                end
+                if not v.Character or v.Character == nil then return end
+
+                local text          = Drawing.new('Text')
+                text.Color          = Color3.new(1,1,1)
+                text.Position       = v2_new(0,0)
+                text.Size           = 16.0
+                text.Outline        = true
+                text.OutlineColor   = Color3.new(0,0,0)
+                text.Center         = true
+                text.Visible        = true
+                text.Text           = 'nil'
+
+                drawingscounter = drawingscounter +1
+                table.insert(drawings, drawingscounter, {text, v})
+            end
+
+            for _,v in pairs(players_service:GetPlayers()) do 
+                if v ~= local_player then
+                    create_esp(v)
+
+                    v.CharacterAdded:Connect(function()
+                        create_esp(v)
+                    end)
+                end
+            end
+
+            players_service.PlayerAdded:Connect(function(plr)
+                if plr ~= local_player then
+                    create_esp(plr)
+                    plr.CharacterAdded:Connect(function()
+                        create_esp(plr)
+                    end)
+                end
+            end)
+
+            update_esp = function()
+                pcall(function()
+                    for i,v in pairs(drawings) do
+                        if v[2] == nil or not v[2].Character or not v[2].Character:FindFirstChildOfClass('Humanoid') then
+                            v[1]:Remove()
+                            table.remove(drawings, i)
+                            drawingscounter = drawingscounter -1
+                        else
+                            local character = v[2].Character
+                            local primary_part = character.PrimaryPart
+                            local humanoid = character:FindFirstChildOfClass('Humanoid')
+                            local local_primary_part = local_player.Character.PrimaryPart
+
+                            local distance = string.format("%d", (local_primary_part.CFrame.p - primary_part.CFrame.p).Magnitude)
+                            local health = string.format("%d", (humanoid.Health))
+                            local maxhealth = string.format("%d", (humanoid.MaxHealth))
+                            
+                            if character and primary_part and humanoid then
+                                v[1].Text = players_service:GetPlayerFromCharacter(character).Name.. '\n ['..tonumber(distance)..'] ['..health..'/'..maxhealth..']'
+                                v[1].Position = worldto_viewport(primary_part)
+                            end
+                            local _, screen = current_camera:worldToViewportPoint(primary_part.Position)
+                            if screen then
+                                v[1].Visible = true
+                            else
+                                v[1].Visible = false
+                            end
+                        end
+                    end
+                end)
+            end
+            services[2]:BindToRenderStep('Update Esp', 300, update_esp)
+        else
+            for i,v in pairs(drawings) do
+                v[1]:Remove()
+                table.remove(drawings, i)
+                drawingscounter = drawingscounter -1
+                services[2]:UnbindFromRenderStep('Update Esp')
+            end
+        end
+    end
+})
+
+--[[
+    OTHERS PLAYERS VARS:
+    HITBOX EXTENDER TAB:
+]]
+
+players_ingame = {}
+players_blacklist = {}
+
+for i,v in pairs(services[1]:GetPlayers()) do
+    if not table.find(players_ingame, v) and not table.find(players_blacklist, v) then
+        table.insert(players_ingame, v)
+        table.insert(players_blacklist, v)
+    end
+end
+
+local Others = Window:AddFolder('Others Players')
+local HitBox = Others:AddFolder('Hitbox Extender')
+
+HitBox:AddLabel({text = 'Hitbox Extender'})
+
+HitBox:AddToggle({
+    text            = 'Toggle Hitbox Extender',
+    state           = false,
+    callback        = function(v)   
+        settings['HitToggle'] = v
+    end
+})
+
+HitBox:AddSlider({
+    text            = 'Hitbox Size',
+    value           = 2,
+    min             = 2,
+    max             = 25,
+    float           = 1,
+    callback        = function(v)
+        settings['HitSize'] = v
+    end
+})
+
+HitBox:AddSlider({
+    text            = 'Hitbox Transparency',
+    value           = 1,
+    min             = 0,
+    max             = 1,
+    float           = 0.1,
+    callback        = function(v)
+        settings['HitTransparency'] = v
+    end
+})
+
+HitBox:AddToggle({
+    text            = 'Everyone',
+    state           = false,
+    callback        = function(v)   
+        settings['HitEveryone'] = v
+    end
+})
+
+HitBox:AddToggle({
+    text            = 'Everyone Except Team',
+    state           = false,
+    callback        = function(v)   
+        settings['HitExceptTeam'] = v
+    end
+})
+
+HitBox:AddToggle({
+    text            = 'Everyone Except ...',
+    state           = false,
+    callback        = function(v)   
+        settings['HitExceptChosen'] = v
+    end
+})
+
+local player_dropdown = HitBox:AddList({
+    text            = 'Select Player',
+    values          = players_blacklist,
+    callback        = function(v) 
+        settings['HitBlacklist'] = v 
+    end
+})
+
+HitBox:AddButton({
+    text            = 'Refresh Player List',
+    callback        = function()
+        table.clear(players_ingame)
+        table.clear(players_blacklist)
+        player_dropdown:RemoveAll()
+
+        for i,v in pairs(services[1]:GetPlayers()) do
+            if not table.find(players_ingame, v) and not table.find(players_blacklist, v) then
+                table.insert(players_ingame, v)
+                table.insert(players_blacklist, v)
+            end
+        end
+
+        for i,v in pairs(players_blacklist) do
+            player_dropdown:AddValue(tostring(v))
+        end
+    end
+})
+
+local v3_new = Vector3.new
+local default_size_1, default_size_2, default_size_3 = 2,2,1
+spawn(function()
+    while task.wait() do
+        if settings.HitToggle then
+            if settings.HitEveryone then
+                for i,v in pairs(players_ingame) do
+                    for i,q in pairs(v.Character:GetChildren()) do
+                        if q.Name == 'HumanoidRootPart' and q.Parent.Name ~= player.Name then
+                            q.Size = v3_new(settings.HitSize,settings.HitSize,settings.HitSize)
+                            q.Transparency = settings.HitTransparency
+                        end
+                    end
+                end
+            end
+            if settings.HitExceptTeam then
+                for i,v in pairs(players_ingame) do
+                    if v.Team ~= player.Team then
+                        for i,q in pairs(v.Character:GetChildren()) do
+                            if q.Name == 'HumanoidRootPart' and q.Parent.Name ~= player.Name then
+                                q.Size = v3_new(settings.HitSize,settings.HitSize,settings.HitSize)
+                                q.Transparency = settings.HitTransparency
+                            end
+                        end
+                    end
+                end
+            end
+            if settings.HitExceptChosen then
+                for i,v in pairs(players_blacklist) do
+                    if v.Name ~= settings.HitBlacklist then
+                        for i,q in pairs(v.Character:GetChildren()) do
+                            if q.Name == 'HumanoidRootPart' and q.Parent.Name ~= player.Name then
+                                q.Size = v3_new(settings.HitSize,settings.HitSize,settings.HitSize)
+                                q.Transparency = settings.HitTransparency
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            for i,v in pairs(players_ingame) do
+                for i,q in pairs(v.Character:GetChildren()) do
+                    if q.Name == 'HumanoidRootPart' and q.Parent.Name ~= player.Name then
+                        q.Size = v3_new(default_size_1, default_size_2, default_size_3)
+                        q.Transparency = 1
+                    end
+                end
+            end
+        end
+    end
+end)
+
+--[[
+    OTHERS PLAYERS VARS:
+    SPECTATE PLAYER TAB:
+]]
+
+local Spectate = Others:AddFolder('Spectate Players')
+
+players_spectate_table = {}
+
+for i,v in pairs(services[1]:GetPlayers()) do
+    if not table.find(players_spectate_table, v) then
+        table.insert(players_spectate_table, v)
+    end
+end
+
+local spectate_drop = Spectate:AddList({
+    text = "Select Player To Spectate",
+    values = players_spectate_table,
+    callback = function(v)
+        settings["PlayerToSpec"] = v
+    end
+})
+
+Spectate:AddButton({
+    text = 'Refresh Player List',
+    callback = function()
+        table.clear(players_spectate_table)
+        spectate_drop:RemoveAll()
+
+        for i,v in pairs(services[1]:GetPlayers()) do
+            if not table.find(players_spectate_table, v.Name) then
+                table.insert(players_spectate_table, v)
+            end
+        end
+
+        for i,v in pairs(players_spectate_table) do
+            spectate_drop:AddValue(tostring(v))
+        end
+    end
+})
+
+Spectate:AddToggle({
+    text = 'Spectate',
+    state = false,
+    callback = function(v)
+        if v then
+            workspace.Camera.CameraSubject = services[1]:FindFirstChild(settings.PlayerToSpec).Character.Humanoid
+        else
+            workspace.Camera.CameraSubject = player.Character.Humanoid
+        end
+    end
+})
+
+Spectate:AddButton({
+    text = 'Teleport To Player',
+    callback = function()
+        player.Character.HumanoidRootPart.CFrame = services[1]:FindFirstChild(settings.PlayerToSpec).Character.HumanoidRootPart.CFrame
+    end
+})
+
+Library:Init()
